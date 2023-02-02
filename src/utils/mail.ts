@@ -5,9 +5,20 @@ import nodemailer from 'nodemailer'
 const MAX = 1000000
 const MIN = 100000
 
-export const mailConfig = {
+export interface MailConfig {
+  MAILER: string | undefined
+  HOST: string | undefined
+  PORT: string | undefined
+  USERNAME: string | undefined
+  PASSWORD: string | undefined
+  ENCRYPTION: string | undefined
+  FROM_ADDRESS: string | undefined
+  FROM_NAME: string | undefined
+}
+
+export const mailConfig: any = {
   MAILER: process.env.MAIL_MAILER,
-  HOST: process.env.MAIL_HOST,
+  HOST: process.env.MAIL_HOST || undefined,
   PORT: process.env.MAIL_PORT,
   USERNAME: process.env.MAIL_USERNAME,
   PASSWORD: process.env.MAIL_PASSWORD,
@@ -17,18 +28,17 @@ export const mailConfig = {
 }
 
 export const sendOtpMail = async (email: string, otpCode: number) => {
-  let transporter = nodemailer.createTransport({
-    service: 'gmail',
+  const transport = nodemailer.createTransport({
     host: mailConfig.HOST,
+    port: mailConfig.PORT,
     secure: false,
     auth: {
-      user: mailConfig.USERNAME, // generated ethereal user
-      pass: mailConfig.PASSWORD, // generated ethereal password
+      user: mailConfig.USERNAME,
+      pass: mailConfig.PASSWORD,
     },
   })
 
-  // send mail with defined transport object
-  let options = {
+  const options = {
     from: mailConfig.FROM_ADDRESS,
     to: email,
     subject: 'OTP Code to verify your account',
@@ -37,14 +47,7 @@ export const sendOtpMail = async (email: string, otpCode: number) => {
       <div>OTP Code: <span style="text-decoration: 'underlined';color= 'red'">${otpCode}</span></div>
     </div>`,
   }
-
-  transporter.sendMail(options, (err) => {
-    if (err) {
-      return false
-    }
-  })
-
-  return true
+  return transport.sendMail(options)
 }
 
 export const generateCode = () => {

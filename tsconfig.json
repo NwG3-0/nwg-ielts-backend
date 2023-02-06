@@ -9,7 +9,7 @@
     "incremental": true,
     "jsx": "react",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "noImplicitAny": false,
     "noImplicitThis": false,

@@ -1,51 +1,45 @@
-FROM node:16-alpine AS deps
+FROM node:16-alpine AS pre-base
 
-RUN apk add --no-cache python3 g++ make
-WORKDIR /app
-COPY package.json yarn.lock ./
-ENV CI=true
-RUN yarn install --ignore-engines
-
-FROM node:16-alpine AS builder
-
-ARG SERVER_PORT
-ARG MONGODB_HOST
-ARG MONGODB_PORT
-ARG MONGODB_DATABASE
-ARG AUTH_SALT_VALUE
-ARG JWT_SECRET_KEY
-ARG JWT_EXPIRATION_DURATION
-ARG MAIL_MAILER
-ARG MAIL_HOST
-ARG MAIL_PORT
-ARG MAIL_USERNAME
-ARG MAIL_PASSWORD
-ARG MAIL_ENCRYPTION
-ARG MAIL_FROM_ADDRESS
-ARG MAIL_FROM_NAME
-
-ENV SERVER_PORT=$SERVER_PORT
-ENV MONGODB_HOST=$MONGODB_HOST
-ENV MONGODB_PORT=$MONGODB_PORT
-ENV MONGODB_DATABASE=$MONGODB_DATABASE
-ENV AUTH_SALT_VALUE=$AUTH_SALT_VALUE
-ENV JWT_SECRET_KEY=$JWT_SECRET_KEY
-ENV JWT_EXPIRATION_DURATION=$JWT_EXPIRATION_DURATION
-ENV MAIL_MAILER=$MAIL_MAILER
-ENV MAIL_HOST=$MAIL_HOST
-ENV MAIL_PORT=$MAIL_PORT
-ENV MAIL_USERNAME=$MAIL_USERNAME
-ENV MAIL_PASSWORD=$MAIL_PASSWORD
-ENV MAIL_ENCRYPTION=$MAIL_ENCRYPTION
-ENV MAIL_FROM_ADDRESS=$MAIL_FROM_ADDRESS
-ENV MAIL_FROM_NAME=$MAIL_FROM_NAME
+RUN apk add --no-cache libc6-compat git
 
 WORKDIR /app
+
+ENV HUSKY=0 CI=true
+
+COPY package.json  yarn.lock ./
+
+RUN npm i -g npm & yarn install --frozen-lockfile
+
+# ----------------------------------------
+FROM pre-base AS build
+
+WORKDIR /app
+
+COPY --from=pre-base /app/node_modules ./node_modules
 COPY . .
-COPY --from=deps /app/node_modules ./node_modules
-RUN apk add --no-cache git
-RUN yarn lint && yarn ts-check && yarn build
+
+RUN yarn install && yarn build
+
+# ----------------------------------------
+FROM build as release
+
+WORKDIR /app
+
+ENV NODE_ENV production
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001
+
+COPY --from=build --chown=nodejs:nodejs /app /app
+
+USER nodejs
 
 EXPOSE 4000
 
-CMD [ "yarn", "dev" ]
+CMD ["yarn", "start"]
+
+# ----------------------------------------
+FROM pre-base AS builder
+
+EXPOSE 4000
+
+CMD ["tail", "-f", "/dev/null"]

@@ -1,7 +1,9 @@
+import mongoose from 'mongoose'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { getReasonPhrase, StatusCodes } from 'http-status-codes'
 import { PostModel } from '../models/Post'
+import { EarliestPostModel } from '../models/EarliestPost'
 
 dayjs.extend(utc)
 
@@ -204,6 +206,68 @@ export const updatePost = async (req, res) => {
     })
 
     res.status(StatusCodes.OK).json({ success: true, data: null, message: 'You update the post successful' })
+  } catch (error) {
+    console.log('[update post] Error: ', error)
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+  }
+}
+
+// Code for Earliest Post Api
+export const getEarliestPost = async (req, res) => {
+  try {
+    const { userId } = req.query
+
+    const user = await EarliestPostModel.findOne({ User: userId })
+      .populate({
+        path: 'Posts',
+      })
+      .transform((doc) => ({
+        _id: doc?._id,
+        user: doc?.User,
+        posts: doc?.Posts.reverse().filter((_d, index) => index <= 2),
+        date: doc?.CreatedAt,
+      }))
+
+    res.status(StatusCodes.OK).json({ success: true, data: user, message: '' })
+  } catch (error) {
+    console.log('[update post] Error: ', error)
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+  }
+}
+
+export const updateEarliestPost = async (req, res) => {
+  try {
+    const { userId, postId } = req.body
+
+    const existUser = await EarliestPostModel.findOne({
+      User: userId,
+    })
+
+    const currentTimestamp = dayjs.utc().unix()
+
+    if (existUser) {
+      await EarliestPostModel.updateOne(
+        { User: userId },
+        {
+          $addToSet: { Posts: new mongoose.Types.ObjectId(postId) },
+        },
+      )
+
+      res.status(StatusCodes.OK).json({ success: true, data: null, message: 'You update the earliest post successful' })
+    } else {
+      await EarliestPostModel.create({
+        Posts: [postId],
+        User: userId,
+        CreatedAt: currentTimestamp,
+        UpdatedAt: currentTimestamp,
+      })
+
+      res.status(StatusCodes.OK).json({ success: true, data: null, message: 'You create the earliest post successful' })
+    }
   } catch (error) {
     console.log('[update post] Error: ', error)
     res

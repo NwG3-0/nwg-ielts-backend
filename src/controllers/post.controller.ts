@@ -16,6 +16,7 @@ export const index = async (req, res) => {
   const startPage = Number((queryString.page || DEFAULT_START_PAGE) - 1)
   const limit = Number(queryString.limit || DEFAULT_ITEM_PER_PAGE)
   const keyword = queryString.keyword || ''
+  const device = queryString.device || 'web'
   let startDate = queryString.startDate
   let endDate = queryString.endDate
 
@@ -30,13 +31,14 @@ export const index = async (req, res) => {
   }
 
   if (typeof startDate === 'undefined' || typeof endDate === 'undefined') {
-    startDate = startDate ?? dayjs.utc().startOf('month').unix()
+    startDate = startDate ?? dayjs.utc().startOf('month').subtract(3, 'months').unix()
     endDate = endDate ?? dayjs.utc().endOf('month').unix()
   }
 
   try {
     const totalRecords = await PostModel.countDocuments({
       CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
+      Device: device,
     })
     const totalPages = Math.ceil(totalRecords / limit)
 
@@ -44,6 +46,7 @@ export const index = async (req, res) => {
       {
         CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
         Title: { $regex: keyword },
+        Device: device,
       },
       null,
       { skip: startPage * limit, limit },
@@ -79,10 +82,16 @@ export const index = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
-    const { title, imageTitle, description } = req.body
+    const { title, imageTitle, description, device } = req.body
 
     if (!title || title === '') {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Title is required' })
+
+      return
+    }
+
+    if (!device || device === '') {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Device is required' })
 
       return
     }
@@ -105,6 +114,7 @@ export const create = async (req, res) => {
       Title: title,
       ImageTitle: imageTitle,
       Description: description,
+      Device: device,
       CreatedAt: currentTimestamp,
       UpdatedAt: currentTimestamp,
     })
@@ -155,7 +165,7 @@ export const detailPost = (req, res) => {
       if (err) {
         res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Can find this post' })
       } else {
-        res.status(StatusCodes.OK).json({ success: false, data: docs, message: '' })
+        res.status(StatusCodes.OK).json({ success: true, data: docs, message: '' })
       }
     })
   } catch (error) {

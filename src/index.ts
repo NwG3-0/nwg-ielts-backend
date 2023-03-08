@@ -11,6 +11,7 @@ import topicDeckRoutes from './routes/topicDeck.route'
 import publicRoutes from './routes/public.route'
 import privateRoutes from './routes/private.router'
 import cardRoutes from './routes/card.route'
+import newsRoutes from './routes/news.router'
 import initializeDBConnection from './database'
 import bodyParser from 'body-parser'
 import { cors } from './utils/cors'
@@ -180,6 +181,7 @@ app.use(syncRoutes)
 app.use(topicDeckRoutes)
 app.use(cardRoutes)
 app.use(privateRoutes)
+app.use(newsRoutes)
 
 server.listen(SERVER_PORT)
 console.log(`Example app listening on port ${SERVER_PORT}`)

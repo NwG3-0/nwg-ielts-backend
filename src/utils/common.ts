@@ -4,3 +4,8 @@ export const FILTER_TAB = {
   MONTH: 'month',
   RANGE: 'range',
 }
+
+export const DEVICES = {
+  MOBILE: 'mobile',
+  WEB: 'web',
+}

@@ -1,7 +1,9 @@
+import mongoose from 'mongoose'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { getReasonPhrase, StatusCodes } from 'http-status-codes'
 import { PostModel } from '../models/Post'
+import { EarliestPostModel } from '../models/EarliestPost'
 
 dayjs.extend(utc)
 
@@ -14,6 +16,7 @@ export const index = async (req, res) => {
   const startPage = Number((queryString.page || DEFAULT_START_PAGE) - 1)
   const limit = Number(queryString.limit || DEFAULT_ITEM_PER_PAGE)
   const keyword = queryString.keyword || ''
+  const device = queryString.device || 'web'
   let startDate = queryString.startDate
   let endDate = queryString.endDate
 
@@ -28,13 +31,14 @@ export const index = async (req, res) => {
   }
 
   if (typeof startDate === 'undefined' || typeof endDate === 'undefined') {
-    startDate = startDate ?? dayjs.utc().startOf('month').unix()
+    startDate = startDate ?? dayjs.utc().startOf('month').subtract(3, 'months').unix()
     endDate = endDate ?? dayjs.utc().endOf('month').unix()
   }
 
   try {
     const totalRecords = await PostModel.countDocuments({
       CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
+      Device: device,
     })
     const totalPages = Math.ceil(totalRecords / limit)
 
@@ -42,6 +46,7 @@ export const index = async (req, res) => {
       {
         CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
         Title: { $regex: keyword },
+        Device: device,
       },
       null,
       { skip: startPage * limit, limit },
@@ -77,10 +82,16 @@ export const index = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
-    const { title, imageTitle, description } = req.body
+    const { title, imageTitle, description, device } = req.body
 
     if (!title || title === '') {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Title is required' })
+
+      return
+    }
+
+    if (!device || device === '') {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Device is required' })
 
       return
     }
@@ -103,6 +114,7 @@ export const create = async (req, res) => {
       Title: title,
       ImageTitle: imageTitle,
       Description: description,
+      Device: device,
       CreatedAt: currentTimestamp,
       UpdatedAt: currentTimestamp,
     })
@@ -153,7 +165,7 @@ export const detailPost = (req, res) => {
       if (err) {
         res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Can find this post' })
       } else {
-        res.status(StatusCodes.OK).json({ success: false, data: docs, message: '' })
+        res.status(StatusCodes.OK).json({ success: true, data: docs, message: '' })
       }
     })
   } catch (error) {
@@ -204,6 +216,68 @@ export const updatePost = async (req, res) => {
     })
 
     res.status(StatusCodes.OK).json({ success: true, data: null, message: 'You update the post successful' })
+  } catch (error) {
+    console.log('[update post] Error: ', error)
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+  }
+}
+
+// Code for Earliest Post Api
+export const getEarliestPost = async (req, res) => {
+  try {
+    const { userId } = req.query
+
+    const user = await EarliestPostModel.findOne({ User: userId })
+      .populate({
+        path: 'Posts',
+      })
+      .transform((doc) => ({
+        _id: doc?._id,
+        user: doc?.User,
+        posts: doc?.Posts.reverse().filter((_d, index) => index <= 2),
+        date: doc?.CreatedAt,
+      }))
+
+    res.status(StatusCodes.OK).json({ success: true, data: user, message: '' })
+  } catch (error) {
+    console.log('[update post] Error: ', error)
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+  }
+}
+
+export const updateEarliestPost = async (req, res) => {
+  try {
+    const { userId, postId } = req.body
+
+    const existUser = await EarliestPostModel.findOne({
+      User: userId,
+    })
+
+    const currentTimestamp = dayjs.utc().unix()
+
+    if (existUser) {
+      await EarliestPostModel.updateOne(
+        { User: userId },
+        {
+          $addToSet: { Posts: new mongoose.Types.ObjectId(postId) },
+        },
+      )
+
+      res.status(StatusCodes.OK).json({ success: true, data: null, message: 'You update the earliest post successful' })
+    } else {
+      await EarliestPostModel.create({
+        Posts: [postId],
+        User: userId,
+        CreatedAt: currentTimestamp,
+        UpdatedAt: currentTimestamp,
+      })
+
+      res.status(StatusCodes.OK).json({ success: true, data: null, message: 'You create the earliest post successful' })
+    }
   } catch (error) {
     console.log('[update post] Error: ', error)
     res

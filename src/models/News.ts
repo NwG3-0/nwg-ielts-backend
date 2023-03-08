@@ -1,26 +1,26 @@
 import mongoose from 'mongoose'
 import { DEVICES } from '../utils/common'
 
-export type PostType = {
+export type NewsType = {
   Title: string
-  ImageTitle: string
-  Description: string
+  Image: string
+  Content: string
   Device: typeof DEVICES
   CreatedAt: number
   UpdatedAt: number
 }
 
-const PostSchema = new mongoose.Schema(
+const NewsSchema = new mongoose.Schema(
   {
     Title: {
       type: String,
       required: true,
     },
-    ImageTitle: {
+    Image: {
       type: String,
       required: true,
     },
-    Description: {
+    Content: {
       type: String,
       required: true,
     },
@@ -38,9 +38,9 @@ const PostSchema = new mongoose.Schema(
     },
   },
   {
-    collection: 'Post',
+    collection: 'News',
     versionKey: false,
   },
 )
 
-export const PostModel = mongoose.model<PostType>('Post', PostSchema)
+export const NewsModel = mongoose.model<NewsType>('News', NewsSchema)

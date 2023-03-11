@@ -4,6 +4,7 @@ import { getReasonPhrase, StatusCodes } from 'http-status-codes'
 import { CardModel } from '../models/Card'
 import { RandomCardModel } from '../models/RandomCard'
 import { UserModel } from '../models/User'
+import mongoose from 'mongoose'
 
 dayjs.extend(utc)
 
@@ -31,6 +32,8 @@ export const randomCard = async (req, res) => {
     const level = userRandomModel.Level
     const topicName = userRandomModel.Topic
 
+    console.log(userId, number, level, topicName)
+
     if (!topicName) {
       res.status(StatusCodes.BAD_REQUEST).json({ success: true, data: null, message: 'You must set up topic' })
       return
@@ -49,7 +52,7 @@ export const randomCard = async (req, res) => {
       [
         {
           $match: {
-            UserId: userId,
+            UserId: new mongoose.Types.ObjectId(userId),
             TopicName: topicName,
             $or: arrLevel.map((lv: string) => ({
               Level: lv,
@@ -62,11 +65,9 @@ export const randomCard = async (req, res) => {
         if (err) {
           res
             .status(StatusCodes.BAD_REQUEST)
-            .json({ success: true, data: null, message: 'You create post successfully' })
+            .json({ success: false, data: null, message: 'You create post successfully' })
         } else {
-          res
-            .status(StatusCodes.OK)
-            .json({ success: true, data: docs, exp: currentTimestamp, message: 'You create post successfully' })
+          res.status(StatusCodes.OK).json({ success: true, data: docs, exp: currentTimestamp })
         }
       },
     )

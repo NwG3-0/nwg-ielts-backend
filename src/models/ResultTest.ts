@@ -9,7 +9,6 @@ export type ResultTestType = {
   ResultTest: string
   Topic: string
   User: mongoose.Schema.Types.ObjectId
-  Skills: SKILLS
   CreatedAt: number
   UpdatedAt: number
 }
@@ -28,10 +27,6 @@ const ResultTestSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-    },
-    Skills: {
-      type: String,
-      require: true,
     },
     CreatedAt: {
       type: Number,

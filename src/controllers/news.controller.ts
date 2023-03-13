@@ -81,7 +81,7 @@ export const index = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
-    const { title, image, content, device } = req.body
+    const { title, type, image, content, device } = req.body
 
     if (!title || title === '') {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Title is required' })
@@ -108,6 +108,7 @@ export const create = async (req, res) => {
       Image: image,
       Content: content,
       Device: device,
+      Type: type,
       CreatedAt: currentTimestamp,
       UpdatedAt: currentTimestamp,
     })

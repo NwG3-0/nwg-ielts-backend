@@ -1,10 +1,12 @@
 import mongoose from 'mongoose'
 import { DEVICES } from '../utils/common'
+import { NEWS } from '../types/news'
 
 export type NewsType = {
   Title: string
   Image: string
   Content: string
+  Type: NEWS
   Device: typeof DEVICES
   CreatedAt: number
   UpdatedAt: number
@@ -17,6 +19,10 @@ const NewsSchema = new mongoose.Schema(
       required: true,
     },
     Image: {
+      type: String,
+      required: true,
+    },
+    Type: {
       type: String,
       required: true,
     },

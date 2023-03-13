@@ -1,7 +1,6 @@
 import mongoose from 'mongoose'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
-import { SKILLS } from '../types/common'
 
 dayjs.extend(utc)
 

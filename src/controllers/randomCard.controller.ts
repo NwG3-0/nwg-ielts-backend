@@ -3,7 +3,6 @@ import utc from 'dayjs/plugin/utc'
 import { getReasonPhrase, StatusCodes } from 'http-status-codes'
 import { CardModel } from '../models/Card'
 import { RandomCardModel } from '../models/RandomCard'
-import { UserModel } from '../models/User'
 import mongoose from 'mongoose'
 
 dayjs.extend(utc)

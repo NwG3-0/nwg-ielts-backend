@@ -38,6 +38,7 @@ export const index = async (req, res) => {
       CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
       Device: device,
     })
+
     const totalPages = Math.ceil(totalRecords / limit)
 
     const news = await NewsModel.find(
@@ -210,6 +211,86 @@ export const updateNews = async (req, res) => {
     res.status(StatusCodes.OK).json({ success: true, data: null, message: 'You update the news successful' })
   } catch (error) {
     console.log('[update news] Error: ', error)
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+  }
+}
+
+export const getNewsByType = async (req, res, next) => {
+  const queryString = req.query
+
+  const startPage = Number((queryString.page || DEFAULT_START_PAGE) - 1)
+  const limit = Number(queryString.limit || DEFAULT_ITEM_PER_PAGE)
+  const keyword = queryString.keyword || ''
+  const device = queryString.device || 'web'
+  const types = queryString.type
+  let startDate = queryString.startDate
+  let endDate = queryString.endDate
+
+  if (startPage < 0) {
+    res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Invalid start page option' })
+    return
+  }
+
+  if (Number.isNaN(limit)) {
+    res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Invalid limit option' })
+    return
+  }
+
+  if (typeof startDate === 'undefined' || typeof endDate === 'undefined') {
+    startDate = startDate ?? dayjs.utc().startOf('month').unix()
+    endDate = endDate ?? dayjs.utc().endOf('month').unix()
+  }
+
+  const typesArray = types.split(',')
+
+  try {
+    const totalRecords = await NewsModel.countDocuments({
+      CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
+      Device: device,
+      $and: typesArray.map((type) => ({
+        Type: type,
+      })),
+    })
+
+    const totalPages = Math.ceil(totalRecords / limit)
+
+    const news = await NewsModel.find(
+      {
+        CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
+        Title: { $regex: keyword },
+        Device: device,
+        $and: typesArray.map((type) => ({
+          Type: type,
+        })),
+      },
+      null,
+      { skip: startPage * limit, limit },
+    )
+      .sort({ CreatedAt: -1 })
+      .lean()
+      .transform((docs) =>
+        docs.map((doc) => ({
+          id: doc._id,
+          title: doc.Title,
+          image: doc.Image,
+          content: doc.Content,
+          day: doc.CreatedAt,
+        })),
+      )
+
+    if (news) {
+      res.status(StatusCodes.OK).json({
+        success: true,
+        data: news,
+        pagination: { startPage: startPage + 1, limit: Number(limit), totalPages, totalRecords },
+      })
+    } else {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: null })
+    }
+  } catch (error) {
+    console.log('[post] Error: ', error)
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })

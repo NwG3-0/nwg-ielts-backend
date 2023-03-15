@@ -15,5 +15,6 @@ router.post('/api/auth/login', authenticationController.login)
 router.post('/api/auth/verify', limiter, authenticationController.verify)
 router.post('/api/auth/resend', authenticationController.resend)
 router.get('/api/auth/get-list', authenticationController.getListUser)
+router.post('/api/auth/logout', authenticationController.logout)
 
 export default router

@@ -6,6 +6,7 @@ import { StatusCodes, getReasonPhrase } from 'http-status-codes'
 import { UserModel } from '../models/User'
 import { ROLE } from '../types/role'
 import { generateCode, sendOtpMail } from '../utils/mail'
+import { client } from '..'
 
 dayjs.extend(utc)
 
@@ -16,9 +17,15 @@ const DEFAULT_ITEM_PER_PAGE = 5
 // User Register
 export const register = async (req, res) => {
   try {
-    const { email, password } = req.body
+    const { email, hobbies, password } = req.body
     if (!email || !password) {
       res.status(StatusCodes.NOT_FOUND).json({ success: false, data: null, message: 'Email & password are required' })
+
+      return
+    }
+
+    if (hobbies.length < 3) {
+      res.status(StatusCodes.NOT_FOUND).json({ success: false, data: null, message: 'Hobbies must be 3' })
 
       return
     }
@@ -45,6 +52,7 @@ export const register = async (req, res) => {
     const currentTimestamp = dayjs.utc().unix()
     const userInfo = await UserModel.create({
       Email: email.toLowerCase(),
+      Hobbies: hobbies.join(','),
       HashedPassword: hashedPassword,
       Role: ROLE.MEMBER,
       IsActivated: false,
@@ -70,7 +78,7 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body
-    console.log(req.body)
+
     if (!email || !password) {
       res.status(StatusCodes.NOT_FOUND).json({ success: false, data: null, message: 'Email & password are required' })
 
@@ -78,6 +86,7 @@ export const login = async (req, res) => {
     }
 
     const userInfo = await UserModel.findOne({ Email: email })
+
     if (!userInfo) {
       res.status(StatusCodes.NOT_FOUND).json({ success: false, data: null, message: 'Invalid login attempt' })
 
@@ -99,7 +108,7 @@ export const login = async (req, res) => {
     }
 
     const jwtToken = jwt.sign(
-      { manager_id: userInfo._id, email, role: userInfo.Role },
+      { manager_id: userInfo._id, email, hobbies: userInfo.Hobbies, role: userInfo.Role },
       process.env.JWT_SECRET_KEY ?? '',
       {
         expiresIn: Number(process.env.JWT_EXPIRATION_DURATION ?? ONE_DAY_IN_SECOND),
@@ -161,7 +170,6 @@ export const resend = async (req, res) => {
 
     if (!updateUser) {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Resend fail' })
-
       return
     }
 
@@ -174,11 +182,23 @@ export const resend = async (req, res) => {
   }
 }
 
-export const logout = (_req, res) => {
+export const logout = async (req, res) => {
   try {
-    jwt.sign({ logout: true }, process.env.JWT_SECRET_KEY ?? '', {
-      expiresIn: 0,
-    })
+    const { token, expiredAt } = req.body
+
+    if (!token) {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Token invalid' })
+
+      return
+    }
+
+    if (!expiredAt) {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Expired time invalid' })
+
+      return
+    }
+
+    await client.set(token, 'blacklisted', 'EX', expiredAt)
 
     res.status(StatusCodes.OK).json({ success: true, data: null, message: 'Logout successfully' })
   } catch (error) {

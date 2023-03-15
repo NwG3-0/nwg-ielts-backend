@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 
 export type UserType = {
   Email: string
+  Hobbies: string
   HashedPassword: string
   CreatedAt: number
   UpdatedAt: number
@@ -17,6 +18,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+    },
+    Hobbies: {
+      type: String,
+      required: true,
     },
     HashedPassword: {
       type: String,

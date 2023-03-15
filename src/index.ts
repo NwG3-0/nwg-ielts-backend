@@ -4,6 +4,7 @@ require('dotenv').config()
 
 import express from 'express'
 import morgan from 'morgan'
+
 import userRoutes from './routes/authentication.route'
 import postRoutes from './routes/post.route'
 import syncRoutes from './routes/sync.route'
@@ -12,6 +13,7 @@ import publicRoutes from './routes/public.route'
 import privateRoutes from './routes/private.router'
 import cardRoutes from './routes/card.route'
 import newsRoutes from './routes/news.router'
+
 import initializeDBConnection from './database'
 import bodyParser from 'body-parser'
 import { cors } from './utils/cors'
@@ -20,6 +22,8 @@ import http from 'http'
 import { getReasonPhrase, StatusCodes } from 'http-status-codes'
 import jsonwebtoken, { TokenExpiredError } from 'jsonwebtoken'
 import { SOCKET_KEYS } from './types/socket'
+import { createClient } from 'redis'
+import { logoutMiddleware } from './middlewares/logout'
 
 const DEFAULT_SERVER_PORT = 4000
 const SERVER_PORT = process.env.SERVER_PORT ? Number(process.env.SERVER_PORT) : DEFAULT_SERVER_PORT
@@ -40,6 +44,7 @@ initializeDBConnection()
 
 const app = express()
 app.use(morgan('combined'))
+export let client
 
 // Check CORS for website
 app.use(cors)
@@ -146,6 +151,7 @@ app.use(userRoutes)
 app.use(publicRoutes)
 
 // Verify access token
+app.use(logoutMiddleware)
 app.use((req, res, next) => {
   try {
     const authorizationHeader = req.headers?.authorization
@@ -183,5 +189,24 @@ app.use(cardRoutes)
 app.use(privateRoutes)
 app.use(newsRoutes)
 
-server.listen(SERVER_PORT)
+server.listen(SERVER_PORT, async () => {
+  try {
+    client = createClient({
+      password: 'CSS1oCiwEiNcXmxAgNVQLotY1xrdtrP8',
+      socket: {
+        host: 'redis-16663.c292.ap-southeast-1-1.ec2.cloud.redislabs.com',
+        port: 16663,
+      },
+    })
+
+    client.on('error', () => {
+      console.log('Redis Client has been connect error')
+    })
+
+    await client.connect()
+    console.log('Connect to Redis server')
+  } catch (error) {
+    console.log(error)
+  }
+})
 console.log(`Example app listening on port ${SERVER_PORT}`)

@@ -6,6 +6,8 @@ export type NewsType = {
   Title: string
   Image: string
   Content: string
+  Like: number
+  View: number
   Type: NEWS
   Device: typeof DEVICES
   CreatedAt: number
@@ -24,6 +26,14 @@ const NewsSchema = new mongoose.Schema(
     },
     Type: {
       type: String,
+      required: true,
+    },
+    Like: {
+      type: Number,
+      required: true,
+    },
+    View: {
+      type: Number,
       required: true,
     },
     Content: {

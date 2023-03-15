@@ -2,6 +2,8 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { getReasonPhrase, StatusCodes } from 'http-status-codes'
 import { NewsModel } from '../models/News'
+import { NEWS } from '../types/news'
+import { ViewNewsModel } from '../models/ViewNews'
 
 dayjs.extend(utc)
 
@@ -57,6 +59,7 @@ export const index = async (req, res) => {
           id: doc._id,
           title: doc.Title,
           image: doc.Image,
+          view: doc.View,
           content: doc.Content,
           day: doc.CreatedAt,
         })),
@@ -108,6 +111,7 @@ export const create = async (req, res) => {
       Image: image,
       Content: content,
       Device: device,
+      View: 0,
       Type: type,
       CreatedAt: currentTimestamp,
       UpdatedAt: currentTimestamp,
@@ -159,7 +163,7 @@ export const detailNews = (req, res) => {
       if (err) {
         res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Can find this news' })
       } else {
-        res.status(StatusCodes.OK).json({ success: false, data: docs, message: '' })
+        res.status(StatusCodes.OK).json({ success: true, data: docs, message: '' })
       }
     })
   } catch (error) {
@@ -176,25 +180,21 @@ export const updateNews = async (req, res) => {
 
     if (!title || title === '') {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Title is required' })
-
       return
     }
 
     if (!image || image === '') {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Image Title is required' })
-
       return
     }
 
     if (!content || content === '') {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Image Title is required' })
-
       return
     }
 
     if (!news_id) {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'News ID is required' })
-
       return
     }
 
@@ -218,7 +218,7 @@ export const updateNews = async (req, res) => {
   }
 }
 
-export const getNewsByType = async (req, res, next) => {
+export const getNewsByType = async (req, res, _next) => {
   const queryString = req.query
 
   const startPage = Number((queryString.page || DEFAULT_START_PAGE) - 1)
@@ -250,7 +250,7 @@ export const getNewsByType = async (req, res, next) => {
     const totalRecords = await NewsModel.countDocuments({
       CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
       Device: device,
-      $and: typesArray.map((type) => ({
+      $and: typesArray.map((type: NEWS) => ({
         Type: type,
       })),
     })
@@ -292,6 +292,36 @@ export const getNewsByType = async (req, res, next) => {
     }
   } catch (error) {
     console.log('[post] Error: ', error)
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+  }
+}
+
+export const addViewNews = async (req, res) => {
+  try {
+    const { newsId } = req.body
+
+    if (!newsId) {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Title is required' })
+      return
+    }
+    const currentTimestamp = dayjs.utc().unix()
+
+    const totalRecords = await ViewNewsModel.countDocuments({
+      News: newsId,
+    })
+
+    NewsModel.findByIdAndUpdate(newsId, {
+      View: totalRecords,
+      UpdatedAt: currentTimestamp,
+    }).catch(() => {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'You update the news fail' })
+    })
+
+    res.status(StatusCodes.OK).json({ success: true, data: null, message: 'You update the news successful' })
+  } catch (error) {
+    console.log('[update news] Error: ', error)
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })

@@ -4,6 +4,7 @@ import { getReasonPhrase, StatusCodes } from 'http-status-codes'
 import { NewsModel } from '../models/News'
 import { NEWS } from '../types/news'
 import { ViewNewsModel } from '../models/ViewNews'
+import { LikeNewsModel } from '../models/LikeNews'
 
 dayjs.extend(utc)
 
@@ -39,6 +40,7 @@ export const index = async (req, res) => {
     const totalRecords = await NewsModel.countDocuments({
       CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
       Device: device,
+      Title: { $regex: keyword },
     })
 
     const totalPages = Math.ceil(totalRecords / limit)
@@ -46,7 +48,6 @@ export const index = async (req, res) => {
     const news = await NewsModel.find(
       {
         CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
-        Title: { $regex: keyword },
         Device: device,
       },
       null,
@@ -112,6 +113,7 @@ export const create = async (req, res) => {
       Content: content,
       Device: device,
       View: 0,
+      Like: 0,
       Type: type,
       CreatedAt: currentTimestamp,
       UpdatedAt: currentTimestamp,
@@ -239,6 +241,11 @@ export const getNewsByType = async (req, res, _next) => {
     return
   }
 
+  if (!types) {
+    res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Invalid types option' })
+    return
+  }
+
   if (typeof startDate === 'undefined' || typeof endDate === 'undefined') {
     startDate = startDate ?? dayjs.utc().startOf('month').unix()
     endDate = endDate ?? dayjs.utc().endOf('month').unix()
@@ -250,7 +257,7 @@ export const getNewsByType = async (req, res, _next) => {
     const totalRecords = await NewsModel.countDocuments({
       CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
       Device: device,
-      $and: typesArray.map((type: NEWS) => ({
+      $or: typesArray.map((type: NEWS) => ({
         Type: type,
       })),
     })
@@ -262,7 +269,7 @@ export const getNewsByType = async (req, res, _next) => {
         CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
         Title: { $regex: keyword },
         Device: device,
-        $and: typesArray.map((type) => ({
+        $or: typesArray.map((type) => ({
           Type: type,
         })),
       },
@@ -322,6 +329,71 @@ export const addViewNews = async (req, res) => {
     res.status(StatusCodes.OK).json({ success: true, data: null, message: 'You update the news successful' })
   } catch (error) {
     console.log('[update news] Error: ', error)
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+  }
+}
+
+export const addLikeNews = async (req, res) => {
+  try {
+    const { newsId } = req.body
+
+    if (!newsId) {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Title is required' })
+      return
+    }
+    const currentTimestamp = dayjs.utc().unix()
+
+    const totalRecords = await LikeNewsModel.countDocuments({
+      News: newsId,
+    })
+
+    NewsModel.findByIdAndUpdate(newsId, {
+      Like: totalRecords,
+      UpdatedAt: currentTimestamp,
+    }).catch(() => {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'You update the news fail' })
+    })
+
+    res.status(StatusCodes.OK).json({ success: true, data: null, message: 'You update the news successful' })
+  } catch (error) {
+    console.log('[update news] Error: ', error)
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+  }
+}
+
+export const getFiveHighestViewNews = async (req, res) => {
+  try {
+    const { device, limit } = req.query
+    const limit_news = limit ?? 5
+
+    const response = await NewsModel.find({ Device: device })
+      .sort({ View: -1 })
+      .limit(limit_news)
+      .transform((docs) =>
+        docs.map((doc) => ({
+          id: doc._id,
+          title: doc.Title,
+          image: doc.Image,
+          view: doc.View,
+          content: doc.Content,
+          day: doc.CreatedAt,
+        })),
+      )
+
+    if (response) {
+      res.status(StatusCodes.OK).json({
+        success: true,
+        data: response,
+      })
+    } else {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: null })
+    }
+  } catch (error) {
+    console.log(error)
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })

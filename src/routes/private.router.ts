@@ -5,7 +5,7 @@ import * as postStatsController from '../controllers/stats.controller'
 import * as messageController from '../controllers/message.controller'
 import * as resultTestController from '../controllers/resultTest.controller'
 import * as viewNewsController from '../controllers/viewNews.controller'
-import * as likeNewsController from '../controllers/like.controller'
+import * as likeController from '../controllers/like.controller'
 
 import rateLimit from 'express-rate-limit'
 
@@ -45,7 +45,10 @@ router.post('/api/result-test/add', resultTestController.addResultTest)
 router.get('/api/news/check-views', viewNewsController.checkViewNews)
 router.post('/api/view-news/create', viewNewsController.addViewNews)
 
-router.get('/api/news/check-like', likeNewsController.checkLikeNews)
-router.post('/api/like-news/create', likeNewsController.addViewNews)
+router.get('/api/news/check-like', likeController.checkLikeNews)
+router.post('/api/like-news/create', likeController.addViewNews)
+
+router.get('/api/post/check-like', likeController.checkLikePost)
+router.post('/api/like-post/create', likeController.addViewPost)
 
 export default router

@@ -152,12 +152,18 @@ app.use(publicRoutes)
 
 // Verify access token
 app.use(logoutMiddleware)
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   try {
     const authorizationHeader = req.headers?.authorization
     if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
       const token = authorizationHeader.split(' ')[1]
       if (token) {
+        const result = await client.get(token)
+        if (result === 'blacklisted') {
+          res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'JWT is expired' })
+          return
+        }
+
         jsonwebtoken.verify(token, process.env.JWT_SECRET_KEY as string, function (err, decoded) {
           if (err) {
             if (err.name === TokenExpiredError.name) {

@@ -1,4 +1,6 @@
 import express from 'express'
+import rateLimit from 'express-rate-limit'
+
 import * as authController from '../controllers/authentication.controller'
 import * as randomController from '../controllers/randomCard.controller'
 import * as postStatsController from '../controllers/stats.controller'
@@ -6,8 +8,6 @@ import * as messageController from '../controllers/message.controller'
 import * as resultTestController from '../controllers/resultTest.controller'
 import * as viewNewsController from '../controllers/viewNews.controller'
 import * as likeController from '../controllers/like.controller'
-
-import rateLimit from 'express-rate-limit'
 
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 15 minutes

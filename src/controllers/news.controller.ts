@@ -32,7 +32,7 @@ export const index = async (req, res) => {
   }
 
   if (typeof startDate === 'undefined' || typeof endDate === 'undefined') {
-    startDate = startDate ?? dayjs.utc().startOf('month').unix()
+    startDate = startDate ?? dayjs.utc().subtract(2, 'months').startOf('month').unix()
     endDate = endDate ?? dayjs.utc().endOf('month').unix()
   }
 
@@ -247,19 +247,15 @@ export const getNewsByType = async (req, res, _next) => {
   }
 
   if (typeof startDate === 'undefined' || typeof endDate === 'undefined') {
-    startDate = startDate ?? dayjs.utc().startOf('month').unix()
+    startDate = startDate ?? dayjs.utc().subtract(2, 'months').startOf('month').unix()
     endDate = endDate ?? dayjs.utc().endOf('month').unix()
   }
-
-  const typesArray = types.split(',')
 
   try {
     const totalRecords = await NewsModel.countDocuments({
       CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
       Device: device,
-      $or: typesArray.map((type: NEWS) => ({
-        Type: type,
-      })),
+      Type: types,
     })
 
     const totalPages = Math.ceil(totalRecords / limit)
@@ -269,9 +265,7 @@ export const getNewsByType = async (req, res, _next) => {
         CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
         Title: { $regex: keyword },
         Device: device,
-        $or: typesArray.map((type) => ({
-          Type: type,
-        })),
+        Type: types,
       },
       null,
       { skip: startPage * limit, limit },

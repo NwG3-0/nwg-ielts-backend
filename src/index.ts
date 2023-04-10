@@ -2,8 +2,13 @@
 
 require('dotenv').config()
 
+import { createClient } from 'redis'
+import jsonwebtoken, { TokenExpiredError } from 'jsonwebtoken'
 import express from 'express'
 import morgan from 'morgan'
+import http from 'http'
+import { getReasonPhrase, StatusCodes } from 'http-status-codes'
+import { Server } from 'socket.io'
 
 import userRoutes from './routes/authentication.route'
 import postRoutes from './routes/post.route'
@@ -16,14 +21,9 @@ import newsRoutes from './routes/news.router'
 
 import initializeDBConnection from './database'
 import bodyParser from 'body-parser'
-import { cors } from './utils/cors'
-import { Server } from 'socket.io'
-import http from 'http'
-import { getReasonPhrase, StatusCodes } from 'http-status-codes'
-import jsonwebtoken, { TokenExpiredError } from 'jsonwebtoken'
 import { SOCKET_KEYS } from './types/socket'
-import { createClient } from 'redis'
-import { logoutMiddleware } from './middlewares/logout'
+import { cors } from './utils/cors'
+import { privateMiddleware } from './middlewares'
 
 const DEFAULT_SERVER_PORT = 4000
 const SERVER_PORT = process.env.SERVER_PORT ? Number(process.env.SERVER_PORT) : DEFAULT_SERVER_PORT
@@ -151,41 +151,7 @@ app.use(userRoutes)
 app.use(publicRoutes)
 
 // Verify access token
-app.use(logoutMiddleware)
-app.use(async (req, res, next) => {
-  try {
-    const authorizationHeader = req.headers?.authorization
-    if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
-      const token = authorizationHeader.split(' ')[1]
-      if (token) {
-        const result = await client.get(token)
-        if (result === 'blacklisted') {
-          res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'JWT is expired' })
-          return
-        }
-
-        jsonwebtoken.verify(token, process.env.JWT_SECRET_KEY as string, function (err, decoded) {
-          if (err) {
-            if (err.name === TokenExpiredError.name) {
-              res.status(StatusCodes.BAD_REQUEST).json({ success: false, result: null, message: err.message })
-            } else {
-              res.status(StatusCodes.BAD_REQUEST).json({ success: false, result: null, message: err.message })
-            }
-          }
-        })
-      }
-    }
-
-    // no token found -> this is authentication API
-    return next()
-  } catch (error) {
-    console.error('[Verify JWT] Error: ', error)
-    res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.UNAUTHORIZED) })
-    return
-  }
-})
+app.use(privateMiddleware)
 
 // Write api private which need jwt in here
 app.use(postRoutes)

@@ -2,7 +2,6 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { getReasonPhrase, StatusCodes } from 'http-status-codes'
 import { NewsModel } from '../models/News'
-import { NEWS } from '../types/news'
 import { ViewNewsModel } from '../models/ViewNews'
 import { LikeNewsModel } from '../models/LikeNews'
 
@@ -23,6 +22,7 @@ export const index = async (req, res) => {
 
   if (startPage < 0) {
     res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Invalid start page option' })
+
     return
   }
 

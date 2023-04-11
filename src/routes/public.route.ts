@@ -12,4 +12,6 @@ router.get('/api/news-type', newsController.getNewsByType)
 router.get('/api/news', newsController.index)
 router.get('/api/news/highest-views', newsController.getFiveHighestViewNews)
 
+router.get('/api/earliest-post', postController.getEarliestPost)
+
 export default router

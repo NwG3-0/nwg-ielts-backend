@@ -46,6 +46,7 @@ export const index = async (req, res) => {
 
     const totalRecords = await CardModel.countDocuments({
       // CreatedAt: { $gte: Number(startDate), $lte: Number(endDate) },
+      UserId: queryString.userId,
     })
     const totalPages = Math.ceil(totalRecords / limit)
 
@@ -65,6 +66,7 @@ export const index = async (req, res) => {
           },
         ],
         Word: { $regex: keyword },
+        UserId: queryString.userId,
       },
       null,
       { skip: startPage * limit, limit },

@@ -67,6 +67,6 @@ router.post('/api/card/delete', privateMiddleware, cardController.deleteCard)
 router.get('/api/card/:cardId', privateMiddleware, cardController.detail)
 router.post('/api/card/check', privateMiddleware, cardController.checkCard)
 
-router.post('/api/earliest-post/update', postController.updateEarliestPost)
+router.post('/api/earliest-post/update', privateMiddleware, postController.updateEarliestPost)
 
 export default router

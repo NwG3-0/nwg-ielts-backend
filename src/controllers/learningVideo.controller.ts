@@ -54,7 +54,6 @@ export const getLearningVideo = async (req, res) => {
           id: doc._id,
           title: doc.Title,
           image: doc.Image,
-          subtitles: doc.SubTitles,
           like: doc.Like,
           view: doc.View,
           day: doc.CreatedAt,
@@ -78,11 +77,31 @@ export const getLearningVideo = async (req, res) => {
   }
 }
 
-export const create = async (req, res, next) => {
+export const detailLearningVideo = (req, res) => {
   try {
-    const { title, type, link, subtitles, image } = req.body
+    const { learning_video_id } = req.query
 
-    console.log({ title, type, link, subtitles, image })
+    LearningVideoModel.findById(learning_video_id, function (err, docs) {
+      if (err) {
+        res
+          .status(StatusCodes.BAD_REQUEST)
+          .json({ success: false, data: null, message: 'Can find this Learning Video Id' })
+      } else {
+        res.status(StatusCodes.OK).json({ success: true, data: docs, message: '' })
+      }
+    })
+  } catch (error) {
+    console.log('[detail news] Error: ', error)
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+  }
+}
+
+export const create = async (req, res, _next) => {
+  try {
+    const { title, type, link, image } = req.body
+
     if (!title || title === '') {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Title is required' })
 
@@ -90,12 +109,6 @@ export const create = async (req, res, next) => {
     }
 
     if (!image || image === '') {
-      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Image is required' })
-
-      return
-    }
-
-    if (!subtitles || subtitles === '') {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Image is required' })
 
       return
@@ -119,7 +132,6 @@ export const create = async (req, res, next) => {
       Title: title,
       Image: image,
       Link: link,
-      SubTitles: subtitles,
       View: 0,
       Like: 0,
       Type: type,

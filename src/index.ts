@@ -13,6 +13,7 @@ import userRoutes from './routes/authentication.route'
 import publicRoutes from './routes/public.route'
 import privateRoutes from './routes/private.router'
 import adminRoutes from './routes/admin.router'
+import learningVideoRoutes from './routes/learningVideo.route'
 
 import initializeDBConnection from './database'
 import bodyParser from 'body-parser'
@@ -146,6 +147,7 @@ app.use(userRoutes)
 app.use(publicRoutes)
 app.use(adminRoutes)
 app.use(privateRoutes)
+app.use(learningVideoRoutes)
 
 server.listen(SERVER_PORT, async () => {
   try {

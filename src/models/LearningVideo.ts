@@ -6,7 +6,6 @@ export type LeaningVideosType = {
   Image: string
   Like: number
   Link: string
-  SubTitles: string
   View: number
   Type: NEWS
   CreatedAt: number
@@ -20,10 +19,6 @@ const LearningVideoSchema = new mongoose.Schema(
       required: true,
     },
     Image: {
-      type: String,
-      required: true,
-    },
-    SubTitles: {
       type: String,
       required: true,
     },

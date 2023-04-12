@@ -63,7 +63,7 @@ export const login = async (req, res) => {
     const userInfo = await AdminModel.findOne({ Email: email })
 
     if (!userInfo) {
-      res.status(StatusCodes.NOT_FOUND).json({ success: false, data: null, message: 'Invalid login attempt' })
+      res.status(StatusCodes.NOT_FOUND).json({ success: false, data: null, message: 'There is no email exist' })
 
       return
     }
@@ -71,7 +71,7 @@ export const login = async (req, res) => {
     const isValidManagerPassword = bcrypt.compareSync(password, userInfo.HashedPassword)
 
     if (!isValidManagerPassword) {
-      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Invalid login attempt' })
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Wrong password or email' })
 
       return
     }

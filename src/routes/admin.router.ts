@@ -7,6 +7,7 @@ import * as postController from '../controllers/post.controller'
 import * as newsController from '../controllers/news.controller'
 import * as syncController from '../controllers/sync.controller'
 import * as topicDeckController from '../controllers/topicDeck.controller'
+import * as subTitleController from '../controllers/topicDeck.controller'
 
 const router = express.Router()
 
@@ -32,5 +33,7 @@ router.post('/api/topic-deck/delete', adminMiddleWare, topicDeckController.delet
 
 // Action to Learning Video Api
 router.post('/api/learning-video/create', adminMiddleWare, learningController.create)
+
+router.post('/api/subtitle/create', adminMiddleWare, subTitleController.create)
 
 export default router

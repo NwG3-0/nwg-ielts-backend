@@ -21,7 +21,6 @@ export const getSubtitleByVideo = async (req, res, next) => {
       null,
       {},
     )
-      .sort({ CreatedAt: -1 })
       .lean()
       .transform((docs) =>
         docs.map((doc) => ({
@@ -86,6 +85,7 @@ export const addSubtitle = async (req, res, _next) => {
     const response = await SubtitleModel.create({
       Text: text,
       Start: start,
+      Duration: duration,
       Translate: translate,
       LearningVideo: learning_video_id,
       CreatedAt: currentTimestamp,

@@ -13,6 +13,7 @@ import * as topicDeckController from '../controllers/topicDeck.controller'
 import * as cardController from '../controllers/card.controller'
 import * as newsController from '../controllers/news.controller'
 import * as postController from '../controllers/post.controller'
+import * as subTitleController from '../controllers/subtitle.controller'
 
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 15 minutes
@@ -68,5 +69,7 @@ router.get('/api/card/:cardId', privateMiddleware, cardController.detail)
 router.post('/api/card/check', privateMiddleware, cardController.checkCard)
 
 router.post('/api/earliest-post/update', privateMiddleware, postController.updateEarliestPost)
+
+router.get('/api/subtitle', privateMiddleware, subTitleController.getSubtitleByVideo)
 
 export default router

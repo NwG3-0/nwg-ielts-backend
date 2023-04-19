@@ -59,11 +59,24 @@ const users = {}
 
 const socketToRoom = {}
 const usersRoom = {}
+const rooms = {}
 
 io.on(SOCKET_KEYS.CONNECTION, (socket) => {
   socket.emit(SOCKET_KEYS.ME, socket.id)
   socket.on(SOCKET_KEYS.USERS, (data) => {
     socket.join(data)
+  })
+
+  socket.on(SOCKET_KEYS.CREATE_ROOM, (data) => {
+    console.log(data)
+    socket.join(data.room)
+    // rooms[data.room][data.user] = data.user
+
+    console.log(socket.data)
+  })
+
+  socket.on(SOCKET_KEYS.JOIN_ROOM, (data) => {
+    socket.to(data.room).emit('Join room successfully')
   })
 
   socket.on(SOCKET_KEYS.CONNECT_CHAT, function (data) {
@@ -121,6 +134,7 @@ io.on(SOCKET_KEYS.CONNECTION, (socket) => {
 
   socket.on(SOCKET_KEYS.DISCONNECT, () => {
     delete users[socket.id]
+
     const roomID = socketToRoom[socket.id]
     let room = usersRoom[roomID]
     if (room) {

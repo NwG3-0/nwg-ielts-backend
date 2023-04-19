@@ -36,6 +36,7 @@ export const sendOtpMail = async (email: string, otpCode: number) => {
       user: mailConfig.USERNAME,
       pass: mailConfig.PASSWORD,
     },
+    from: mailConfig.FROM_ADDRESS,
   })
 
   const options = {
@@ -47,7 +48,14 @@ export const sendOtpMail = async (email: string, otpCode: number) => {
       <div>OTP Code: <span style="text-decoration: 'underlined';color= 'red'">${otpCode}</span></div>
     </div>`,
   }
-  return transport.sendMail(options)
+
+  return transport.sendMail(options, (error, info) => {
+    if (error) {
+      console.log(error)
+    } else {
+      console.log('Email sent: ' + info.response)
+    }
+  })
 }
 
 export const generateCode = () => {

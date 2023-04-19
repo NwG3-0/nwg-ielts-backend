@@ -2,6 +2,7 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import { StatusCodes, getReasonPhrase } from 'http-status-codes'
 import { SubtitleModel } from '../models/Subtitle'
+import { getRandomWord } from '../utils/common'
 
 dayjs.extend(utc)
 
@@ -26,6 +27,53 @@ export const getSubtitleByVideo = async (req, res, next) => {
         docs.map((doc) => ({
           id: doc._id,
           text: doc.Text,
+          start: doc.Start,
+          duration: doc.Duration,
+          translate: doc.Translate,
+          day: doc.CreatedAt,
+        })),
+      )
+
+    if (subtitles) {
+      res.status(StatusCodes.OK).json({
+        success: true,
+        data: subtitles,
+      })
+    } else {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: null })
+    }
+  } catch (error) {
+    console.log('[post] Error: ', error)
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+
+    return next
+  }
+}
+
+export const getSubtitleRandomByVideo = async (req, res, next) => {
+  try {
+    const { learning_video_id } = req.query
+
+    if (!learning_video_id) {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Invalid Learning Video Id' })
+      return
+    }
+
+    const subtitles = await SubtitleModel.find(
+      {
+        LearningVideo: learning_video_id,
+      },
+      null,
+      {},
+    )
+      .lean()
+      .transform((docs) =>
+        docs.map((doc) => ({
+          id: doc._id,
+          text: doc.Text,
+          word: getRandomWord(doc.Text),
           start: doc.Start,
           duration: doc.Duration,
           translate: doc.Translate,

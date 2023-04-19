@@ -27,4 +27,10 @@ export enum SOCKET_KEYS {
   RESPONSE_CHAT = 'response_chat',
   SEEN_CHAT = 'seen_chat',
   SEEN_CHAT_RESPONSE = 'seen_chat_response',
+
+  // Draw Game
+  CREATE_ROOM = 'create_room',
+  JOIN_ROOM = 'join_room',
+  DISCONNECT_ROOM = 'disconnect_room',
+  ROOMS = 'rooms',
 }

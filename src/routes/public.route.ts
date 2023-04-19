@@ -15,5 +15,7 @@ router.get('/api/news/highest-views', newsController.getFiveHighestViewNews)
 
 router.get('/api/earliest-post', postController.getEarliestPost)
 
+router.get('/api/subtitle/random', subTitleController.getSubtitleRandomByVideo)
 router.post('/api/subtitle/create', subTitleController.addSubtitle)
+
 export default router

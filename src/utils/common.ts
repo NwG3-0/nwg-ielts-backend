@@ -9,3 +9,8 @@ export const DEVICES = {
   MOBILE: 'mobile',
   WEB: 'web',
 }
+
+export function getRandomWord(sentence) {
+  const words = sentence.split(' ')
+  return words[Math.floor(Math.random() * words.length)]
+}

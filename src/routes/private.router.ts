@@ -14,6 +14,8 @@ import * as cardController from '../controllers/card.controller'
 import * as newsController from '../controllers/news.controller'
 import * as postController from '../controllers/post.controller'
 import * as subTitleController from '../controllers/subtitle.controller'
+import * as vipCodeController from '../controllers/vipCode.controller'
+import * as checkoutBillController from '../controllers/checkoutBill.controller'
 
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 15 minutes
@@ -71,5 +73,10 @@ router.post('/api/card/check', privateMiddleware, cardController.checkCard)
 router.post('/api/earliest-post/update', privateMiddleware, postController.updateEarliestPost)
 
 router.get('/api/subtitle', privateMiddleware, subTitleController.getSubtitleByVideo)
+
+// Vip Code Generate
+router.post('/api/sendCode', privateMiddleware, vipCodeController.sendCode)
+router.post('/api/checkoutBill/create', privateMiddleware, checkoutBillController.createCheckoutBill)
+router.post('/api/active-user', privateMiddleware, vipCodeController.activeUser)
 
 export default router

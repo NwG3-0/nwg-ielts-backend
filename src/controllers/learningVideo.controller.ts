@@ -98,7 +98,7 @@ export const detailLearningVideo = (req, res) => {
   }
 }
 
-export const create = async (req, res, _next) => {
+export const create = async (req, res, next) => {
   try {
     const { title, type, link, image } = req.body
 
@@ -149,5 +149,7 @@ export const create = async (req, res, _next) => {
     res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ success: false, data: null, message: getReasonPhrase(StatusCodes.INTERNAL_SERVER_ERROR) })
+
+    return next(error)
   }
 }

@@ -61,3 +61,34 @@ export const sendOtpMail = async (email: string, otpCode: number) => {
 export const generateCode = () => {
   return Math.round(Math.random() * (MAX - MIN) + MIN)
 }
+
+export const sendRedeemCode = async (email: string, codeRedeem: string) => {
+  const transport = nodemailer.createTransport({
+    host: mailConfig.HOST,
+    port: mailConfig.PORT,
+    secure: false,
+    auth: {
+      user: mailConfig.USERNAME,
+      pass: mailConfig.PASSWORD,
+    },
+    from: mailConfig.FROM_ADDRESS,
+  })
+
+  const options = {
+    from: mailConfig.FROM_ADDRESS,
+    to: email,
+    subject: 'Redeem Code',
+    html: `<div>
+      <div>Please check your OTP Code</div>
+      <div>Redeem Code: <span style="text-decoration: 'underlined';color= 'red'">${codeRedeem}</span></div>
+    </div>`,
+  }
+
+  return transport.sendMail(options, (error, info) => {
+    if (error) {
+      console.log(error)
+    } else {
+      console.log('Email sent: ' + info.response)
+    }
+  })
+}

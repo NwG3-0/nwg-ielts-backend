@@ -26,6 +26,7 @@
   "homepage": "https://github.com/LongTuan-123/Learning-English-Backend#readme",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.36.2",
     "dayjs": "^1.11.6",
     "dotenv": "^16.0.3",
     "esbuild": "^0.15.7",

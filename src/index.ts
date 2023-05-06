@@ -8,6 +8,7 @@ import morgan from 'morgan'
 import http from 'http'
 import { Server } from 'socket.io'
 import helmet from 'helmet'
+import bodyParser from 'body-parser'
 
 import userRoutes from './routes/authentication.route'
 import publicRoutes from './routes/public.route'
@@ -16,7 +17,6 @@ import adminRoutes from './routes/admin.router'
 import learningVideoRoutes from './routes/learningVideo.route'
 
 import initializeDBConnection from './database'
-import bodyParser from 'body-parser'
 import { SOCKET_KEYS } from './types/socket'
 import { cors } from './utils/cors'
 

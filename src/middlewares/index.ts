@@ -7,7 +7,7 @@ export const adminMiddleWare = (req, res, next) => {
     const authorizationHeader = req.headers?.authorization
     if (!authorizationHeader || authorizationHeader === '') {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Underfined Authorization' })
-      return
+      throw new Error('Underfined Authorization')
     }
 
     if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
@@ -17,8 +17,12 @@ export const adminMiddleWare = (req, res, next) => {
           if (err) {
             if (err.name === TokenExpiredError.name) {
               res.status(StatusCodes.BAD_REQUEST).json({ success: false, result: null, message: err.message })
+
+              throw new Error(err.message)
             } else {
               res.status(StatusCodes.BAD_REQUEST).json({ success: false, result: null, message: err.message })
+
+              throw new Error(err.message)
             }
           }
         })

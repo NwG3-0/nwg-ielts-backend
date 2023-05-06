@@ -5,6 +5,7 @@ import { NEWS } from '../types/news'
 export type NewsType = {
   Title: string
   Image: string
+  Description: string
   Content: string
   Like: number
   View: number
@@ -21,6 +22,10 @@ const NewsSchema = new mongoose.Schema(
       required: true,
     },
     Image: {
+      type: String,
+      required: true,
+    },
+    Description: {
       type: String,
       required: true,
     },

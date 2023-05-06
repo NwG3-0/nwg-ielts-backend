@@ -4,6 +4,7 @@ import utc from 'dayjs/plugin/utc'
 import { getReasonPhrase, StatusCodes } from 'http-status-codes'
 import { PostModel } from '../models/Post'
 import { EarliestPostModel } from '../models/EarliestPost'
+import { cloud, options } from '../utils/cloudinary'
 
 dayjs.extend(utc)
 
@@ -110,9 +111,11 @@ export const create = async (req, res) => {
 
     const currentTimestamp = dayjs.utc().unix()
 
+    const result = await cloud.uploader.upload(imageTitle, options)
+
     const response = await PostModel.create({
       Title: title,
-      ImageTitle: imageTitle,
+      ImageTitle: result.secure_url,
       Description: description,
       Device: device,
       CreatedAt: currentTimestamp,

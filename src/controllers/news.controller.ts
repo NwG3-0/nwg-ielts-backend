@@ -4,6 +4,7 @@ import { getReasonPhrase, StatusCodes } from 'http-status-codes'
 import { NewsModel } from '../models/News'
 import { ViewNewsModel } from '../models/ViewNews'
 import { LikeNewsModel } from '../models/LikeNews'
+import { cloud, options } from '../utils/cloudinary'
 
 dayjs.extend(utc)
 
@@ -85,7 +86,7 @@ export const index = async (req, res) => {
 
 export const create = async (req, res) => {
   try {
-    const { title, type, image, content, device } = req.body
+    const { title, type, image, description, content, device } = req.body
 
     if (!title || title === '') {
       res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Title is required' })
@@ -93,23 +94,26 @@ export const create = async (req, res) => {
       return
     }
 
-    if (!image || image === '') {
-      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Image is required' })
+    if (!content || content === '') {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Content is required' })
 
       return
     }
 
-    if (!content || content === '') {
-      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Image Title is required' })
+    if (!description || description === '') {
+      res.status(StatusCodes.BAD_REQUEST).json({ success: false, data: null, message: 'Description is required' })
 
       return
     }
 
     const currentTimestamp = dayjs.utc().unix()
 
+    const result = await cloud.uploader.upload(image, options)
+
     const response = await NewsModel.create({
       Title: title,
-      Image: image,
+      Image: result.secure_url,
+      Description: description,
       Content: content,
       Device: device,
       View: 0,
